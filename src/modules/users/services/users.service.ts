@@ -99,7 +99,7 @@ export class UserService {
           throw new NotFoundException('User not found');
         }
 
-        if (user.Account && user.Account.balance !== 0) {
+        if (user.Account && user.Account.balance.toNumber() !== 0) {
           throw new BadRequestException(
             'Cannot delete user because the account balance is not zero',
           );

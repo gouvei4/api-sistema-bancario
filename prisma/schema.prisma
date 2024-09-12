@@ -28,15 +28,15 @@ model User {
 }
 
 model Account {
-  id String @id @default(uuid())
-  accountNumber String @unique
+  id           String      @id @default(uuid())
+  accountNumber String     @unique
   agencyNumber String
-  balance Int
-  type AccountTypes
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  balance      Decimal     
+  type         AccountTypes
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
-  User User? 
+  User         User? 
 }
 
 enum AccountTypes {

@@ -21,7 +21,7 @@ CREATE TABLE `Account` (
     `id` VARCHAR(191) NOT NULL,
     `accountNumber` VARCHAR(191) NOT NULL,
     `agencyNumber` VARCHAR(191) NOT NULL,
-    `balance` INTEGER NOT NULL,
+    `balance` DECIMAL(65, 30) NOT NULL,
     `type` ENUM('checking', 'savings') NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
