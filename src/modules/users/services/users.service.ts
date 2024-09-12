@@ -8,12 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { DatabaseService } from 'src/database/database.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { AccountGenerator } from '../utils/generators/account.generator';
-import { plainToInstance } from 'class-transformer';
-import { validate } from 'class-validator';
-import {
-  CreateUserDtoValidation,
-  UpdateUserDtoValidation,
-} from '../validation/user.validation';
+import { cpfFormatter } from '../utils/formatters/cpf.formatter';
 
 @Injectable()
 export class UserService {
@@ -25,25 +20,18 @@ export class UserService {
     if (!users) {
       throw new NotFoundException('Users not found');
     }
+    const totalUsers = await this.databaseService.account.count();
 
-    return users;
+    return {
+      totalUsers,
+      users: users.map((users) => ({
+        ...users,
+      })),
+    };
   }
 
   async create(createUserDto: CreateUserDto) {
-    const userDtoInstance = plainToInstance(
-      CreateUserDtoValidation,
-      createUserDto,
-    );
-    const validationErrors = await validate(userDtoInstance);
-
-    if (validationErrors.length > 0) {
-      const errorMessages = validationErrors.map((error) =>
-        Object.values(error.constraints || {}).join(', '),
-      );
-      throw new BadRequestException(
-        `Validation failed: ${errorMessages.join(', ')}`,
-      );
-    }
+    createUserDto.cpf = cpfFormatter.exec(createUserDto.cpf);
 
     await this.checkIfUserExists(createUserDto.cpf, createUserDto.phoneNumber);
 
@@ -68,21 +56,6 @@ export class UserService {
     userId: string,
     updateData: { phone?: string; oldPassword?: string; newPassword?: string },
   ) {
-    const userDtoInstance = plainToInstance(
-      UpdateUserDtoValidation,
-      updateData,
-    );
-    const validationErrors = await validate(userDtoInstance);
-
-    if (validationErrors.length > 0) {
-      const errorMessages = validationErrors.map((error) =>
-        Object.values(error.constraints || {}).join(', '),
-      );
-      throw new BadRequestException(
-        `Validation failed: ${errorMessages.join(', ')}`,
-      );
-    }
-
     const user = await this.databaseService.user.findUnique({
       where: { id: userId },
     });
@@ -135,13 +108,20 @@ export class UserService {
           throw new NotFoundException('User not found');
         }
 
-        if (user.Account && user.Account.balance.toNumber() !== 0) {
-          throw new BadRequestException(
-            'Cannot delete user because the account balance is not zero',
-          );
-        }
-
         if (user.Account) {
+          const balanceFormatted = user.Account.balance
+            .toNumber()
+            .toLocaleString('en-US', {
+              style: 'currency',
+              currency: 'USD',
+            });
+
+          if (user.Account.balance.toNumber() !== 0) {
+            throw new BadRequestException(
+              `Cannot delete user because the account balance is not zero (${balanceFormatted})`,
+            );
+          }
+
           await prisma.account.delete({
             where: { id: user.Account.id },
           });

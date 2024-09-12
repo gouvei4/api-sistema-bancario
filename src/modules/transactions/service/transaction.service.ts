@@ -5,19 +5,18 @@ import {
 } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/library';
 import { compare } from 'bcrypt';
-import { plainToInstance } from 'class-transformer';
-import { validate } from 'class-validator';
 import { DatabaseService } from 'src/database/database.service';
-import {
-  CheckBalanceValidation,
-  DepositDtoValidation,
-  TransferDtoValidation,
-  WithdrawDtoValidation,
-} from '../validation/transaction.validation';
 
 @Injectable()
 export class TransactionService {
   constructor(private readonly dataBaseService: DatabaseService) {}
+
+  private formatCurrency(value: Decimal): string {
+    return value.toNumber().toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    });
+  }
 
   async getAllAccounts() {
     const accounts = await this.dataBaseService.account.findMany({
@@ -41,30 +40,14 @@ export class TransactionService {
 
     return {
       totalAccounts,
-      accounts,
+      accounts: accounts.map((account) => ({
+        ...account,
+        balance: this.formatCurrency(account.balance),
+      })),
     };
   }
 
-  async deposit(accountNumber: string, balance: number) {
-    const depositDto = plainToInstance(DepositDtoValidation, {
-      accountNumber,
-      balance,
-    });
-    const validationErrors = await validate(depositDto);
-
-    if (validationErrors.length > 0) {
-      const errorMessages = validationErrors.map((error) =>
-        Object.values(error.constraints || {}).join(', '),
-      );
-      throw new BadRequestException(
-        `Validation failed: ${errorMessages.join(', ')}`,
-      );
-    }
-
-    if (balance <= 0) {
-      throw new BadRequestException('Deposit amount must be greater than zero');
-    }
-
+  async deposit(accountNumber: string, balance: number, password: string) {
     if (balance <= 0) {
       throw new BadRequestException('Deposit amount must be greater than zero');
     }
@@ -73,11 +56,16 @@ export class TransactionService {
       async (prisma) => {
         const account = await prisma.account.findUnique({
           where: { accountNumber },
-          include: { User: { select: { name: true } } },
+          include: { User: true },
         });
 
-        if (!account) {
+        if (!account || !account.User) {
           throw new NotFoundException('Account not found');
+        }
+
+        const isPasswordValid = await compare(password, account.User.password);
+        if (!isPasswordValid) {
+          throw new BadRequestException('Invalid password');
         }
 
         const newBalance = new Decimal(account.balance).plus(
@@ -92,8 +80,8 @@ export class TransactionService {
         });
 
         return {
-          message: `Amount deposited: ${balance}`,
-          balance: updatedAccount.balance,
+          message: `Amount deposited: ${this.formatCurrency(new Decimal(balance))}`,
+          balance: this.formatCurrency(updatedAccount.balance),
           accountNumber: account.accountNumber,
           agencyNumber: account.agencyNumber,
           name: account.User.name,
@@ -104,22 +92,7 @@ export class TransactionService {
     return updatedAccount;
   }
 
-  async withdraw(accountNumber: string, amount: number) {
-    const withdrawDto = plainToInstance(WithdrawDtoValidation, {
-      accountNumber,
-      amount,
-    });
-    const validationErrors = await validate(withdrawDto);
-
-    if (validationErrors.length > 0) {
-      const errorMessages = validationErrors.map((error) =>
-        Object.values(error.constraints || {}).join(', '),
-      );
-      throw new BadRequestException(
-        `Validation failed: ${errorMessages.join(', ')}`,
-      );
-    }
-
+  async withdraw(accountNumber: string, amount: number, password: string) {
     if (amount <= 0) {
       throw new BadRequestException(
         'Withdrawal amount must be greater than zero',
@@ -130,11 +103,16 @@ export class TransactionService {
       async (prisma) => {
         const account = await prisma.account.findUnique({
           where: { accountNumber },
-          include: { User: { select: { name: true } } },
+          include: { User: true },
         });
 
-        if (!account) {
+        if (!account || !account.User) {
           throw new NotFoundException('Account not found');
+        }
+
+        const isPasswordValid = await compare(password, account.User.password);
+        if (!isPasswordValid) {
+          throw new BadRequestException('Invalid password');
         }
 
         if (new Decimal(account.balance).lessThan(new Decimal(amount))) {
@@ -153,8 +131,8 @@ export class TransactionService {
         });
 
         return {
-          message: `Amount withdrawn: ${amount}`,
-          balance: updatedAccount.balance,
+          message: `Amount withdrawn: ${this.formatCurrency(new Decimal(amount))}`,
+          balance: this.formatCurrency(updatedAccount.balance),
           accountNumber: account.accountNumber,
           agencyNumber: account.agencyNumber,
           name: account.User.name,
@@ -169,22 +147,8 @@ export class TransactionService {
     fromAccountNumber: string,
     toAccountNumber: string,
     balance: number,
+    password: string,
   ) {
-    const transferDto = plainToInstance(TransferDtoValidation, {
-      fromAccountNumber,
-      toAccountNumber,
-      balance,
-    });
-    const validationErrors = await validate(transferDto);
-
-    if (validationErrors.length > 0) {
-      const errorMessages = validationErrors.map((error) =>
-        Object.values(error.constraints || {}).join(', '),
-      );
-      throw new BadRequestException(
-        `Validation failed: ${errorMessages.join(', ')}`,
-      );
-    }
     if (balance <= 0) {
       throw new BadRequestException(
         'Transfer amount must be greater than zero',
@@ -194,18 +158,27 @@ export class TransactionService {
     const result = await this.dataBaseService.$transaction(async (prisma) => {
       const fromAccount = await prisma.account.findUnique({
         where: { accountNumber: fromAccountNumber },
+        include: { User: true },
       });
 
       const toAccount = await prisma.account.findUnique({
         where: { accountNumber: toAccountNumber },
       });
 
-      if (!fromAccount) {
+      if (!fromAccount || !fromAccount.User) {
         throw new NotFoundException('Source account not found');
       }
 
       if (!toAccount) {
         throw new NotFoundException('Destination account not found');
+      }
+
+      const isPasswordValid = await compare(
+        password,
+        fromAccount.User.password,
+      );
+      if (!isPasswordValid) {
+        throw new BadRequestException('Invalid password');
       }
 
       if (new Decimal(fromAccount.balance).lessThan(new Decimal(balance))) {
@@ -227,37 +200,23 @@ export class TransactionService {
       });
 
       return {
-        message: `Transfer of ${balance} completed successfully`,
+        message: `Transfer of ${this.formatCurrency(
+          new Decimal(balance),
+        )} completed successfully`,
         fromAccount: {
           accountNumber: updatedFromAccount.accountNumber,
-          balance: updatedFromAccount.balance,
+          balance: this.formatCurrency(updatedFromAccount.balance),
         },
         toAccount: {
           accountNumber: updatedToAccount.accountNumber,
-          balance: updatedToAccount.balance,
+          balance: this.formatCurrency(updatedToAccount.balance),
         },
       };
     });
 
     return result;
   }
-
   async checkBalance(accountNumber: string, password: string) {
-    const checkBalanceDto = plainToInstance(CheckBalanceValidation, {
-      accountNumber,
-      password,
-    });
-    const validationErrors = await validate(checkBalanceDto);
-
-    if (validationErrors.length > 0) {
-      const errorMessages = validationErrors.map((error) =>
-        Object.values(error.constraints || {}).join(', '),
-      );
-      throw new BadRequestException(
-        `Validation failed: ${errorMessages.join(', ')}`,
-      );
-    }
-
     const account = await this.dataBaseService.account.findUnique({
       where: { accountNumber },
       include: { User: true },
@@ -273,8 +232,8 @@ export class TransactionService {
     }
 
     return {
-      message: `Balance retrieved successfully`,
-      balance: account.balance,
+      message: 'Balance retrieved successfully',
+      balance: this.formatCurrency(account.balance),
       name: account.User.name,
     };
   }
