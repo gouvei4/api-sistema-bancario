@@ -5,10 +5,18 @@ import {
   Get,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { TransactionService } from '../service/transaction.service';
 import { CheckBalanceDto } from '../dto/check-balance.dto';
+import { JwtAuthGuard } from 'src/auth/jwt.auth.guard';
 
 @ApiTags('transactions')
 @Controller('transactions')
@@ -16,6 +24,8 @@ export class TransactionController {
   constructor(private readonly transactionService: TransactionService) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Retrieve all accounts' })
   @ApiResponse({
     status: 200,
@@ -27,6 +37,8 @@ export class TransactionController {
   }
 
   @Post('deposit')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Deposit funds into an account' })
   @ApiBody({
     description: 'Deposit request data',
@@ -52,6 +64,8 @@ export class TransactionController {
   }
 
   @Post('withdraw')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Withdraw funds from an account' })
   @ApiBody({
     description: 'Withdraw request data',
@@ -97,6 +111,8 @@ export class TransactionController {
     description: 'Source or destination account not found.',
   })
   @Post('transfer')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   async transfer(
     @Body()
     transferDto: {
@@ -129,6 +145,8 @@ export class TransactionController {
   }
 
   @Get('balance')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Check the balance of an account' })
   @ApiResponse({ status: 200, description: 'Balance retrieved successfully.' })
   @ApiResponse({ status: 400, description: 'Bad request, invalid input data.' })
