@@ -5,7 +5,15 @@ import {
 } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/library';
 import { compare } from 'bcrypt';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 import { DatabaseService } from 'src/database/database.service';
+import {
+  CheckBalanceValidation,
+  DepositDtoValidation,
+  TransferDtoValidation,
+  WithdrawDtoValidation,
+} from '../validation/transaction.validation';
 
 @Injectable()
 export class TransactionService {
@@ -38,6 +46,25 @@ export class TransactionService {
   }
 
   async deposit(accountNumber: string, balance: number) {
+    const depositDto = plainToInstance(DepositDtoValidation, {
+      accountNumber,
+      balance,
+    });
+    const validationErrors = await validate(depositDto);
+
+    if (validationErrors.length > 0) {
+      const errorMessages = validationErrors.map((error) =>
+        Object.values(error.constraints || {}).join(', '),
+      );
+      throw new BadRequestException(
+        `Validation failed: ${errorMessages.join(', ')}`,
+      );
+    }
+
+    if (balance <= 0) {
+      throw new BadRequestException('Deposit amount must be greater than zero');
+    }
+
     if (balance <= 0) {
       throw new BadRequestException('Deposit amount must be greater than zero');
     }
@@ -78,6 +105,21 @@ export class TransactionService {
   }
 
   async withdraw(accountNumber: string, amount: number) {
+    const withdrawDto = plainToInstance(WithdrawDtoValidation, {
+      accountNumber,
+      amount,
+    });
+    const validationErrors = await validate(withdrawDto);
+
+    if (validationErrors.length > 0) {
+      const errorMessages = validationErrors.map((error) =>
+        Object.values(error.constraints || {}).join(', '),
+      );
+      throw new BadRequestException(
+        `Validation failed: ${errorMessages.join(', ')}`,
+      );
+    }
+
     if (amount <= 0) {
       throw new BadRequestException(
         'Withdrawal amount must be greater than zero',
@@ -128,6 +170,21 @@ export class TransactionService {
     toAccountNumber: string,
     balance: number,
   ) {
+    const transferDto = plainToInstance(TransferDtoValidation, {
+      fromAccountNumber,
+      toAccountNumber,
+      balance,
+    });
+    const validationErrors = await validate(transferDto);
+
+    if (validationErrors.length > 0) {
+      const errorMessages = validationErrors.map((error) =>
+        Object.values(error.constraints || {}).join(', '),
+      );
+      throw new BadRequestException(
+        `Validation failed: ${errorMessages.join(', ')}`,
+      );
+    }
     if (balance <= 0) {
       throw new BadRequestException(
         'Transfer amount must be greater than zero',
@@ -186,6 +243,21 @@ export class TransactionService {
   }
 
   async checkBalance(accountNumber: string, password: string) {
+    const checkBalanceDto = plainToInstance(CheckBalanceValidation, {
+      accountNumber,
+      password,
+    });
+    const validationErrors = await validate(checkBalanceDto);
+
+    if (validationErrors.length > 0) {
+      const errorMessages = validationErrors.map((error) =>
+        Object.values(error.constraints || {}).join(', '),
+      );
+      throw new BadRequestException(
+        `Validation failed: ${errorMessages.join(', ')}`,
+      );
+    }
+
     const account = await this.dataBaseService.account.findUnique({
       where: { accountNumber },
       include: { User: true },

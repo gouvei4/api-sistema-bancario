@@ -8,6 +8,12 @@ import * as bcrypt from 'bcrypt';
 import { DatabaseService } from 'src/database/database.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { AccountGenerator } from '../utils/generators/account.generator';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
+import {
+  CreateUserDtoValidation,
+  UpdateUserDtoValidation,
+} from '../validation/user.validation';
 
 @Injectable()
 export class UserService {
@@ -24,6 +30,21 @@ export class UserService {
   }
 
   async create(createUserDto: CreateUserDto) {
+    const userDtoInstance = plainToInstance(
+      CreateUserDtoValidation,
+      createUserDto,
+    );
+    const validationErrors = await validate(userDtoInstance);
+
+    if (validationErrors.length > 0) {
+      const errorMessages = validationErrors.map((error) =>
+        Object.values(error.constraints || {}).join(', '),
+      );
+      throw new BadRequestException(
+        `Validation failed: ${errorMessages.join(', ')}`,
+      );
+    }
+
     await this.checkIfUserExists(createUserDto.cpf, createUserDto.phoneNumber);
 
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
@@ -47,6 +68,21 @@ export class UserService {
     userId: string,
     updateData: { phone?: string; oldPassword?: string; newPassword?: string },
   ) {
+    const userDtoInstance = plainToInstance(
+      UpdateUserDtoValidation,
+      updateData,
+    );
+    const validationErrors = await validate(userDtoInstance);
+
+    if (validationErrors.length > 0) {
+      const errorMessages = validationErrors.map((error) =>
+        Object.values(error.constraints || {}).join(', '),
+      );
+      throw new BadRequestException(
+        `Validation failed: ${errorMessages.join(', ')}`,
+      );
+    }
+
     const user = await this.databaseService.user.findUnique({
       where: { id: userId },
     });
