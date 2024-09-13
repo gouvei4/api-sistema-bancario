@@ -22,37 +22,40 @@ import { UpdateUserDto } from '../dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/jwt.auth.guard';
 
 @ApiTags('users')
-@Controller('user')
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Retrieve all users' })
   @ApiResponse({
     status: 200,
     description: 'List of users retrieved successfully.',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', example: '1' },
+          name: { type: 'string', example: 'Afonso Gouveia' },
+          cpf: { type: 'string', example: '333.333.333-12' },
+          phoneNumber: { type: 'string', example: '+55 19 99898-1616' },
+          dateOfBirth: { type: 'string', example: '1990-01-01T00:00:00.000Z' },
+          accountType: { type: 'string', example: 'savings' },
+        },
+      },
+    },
   })
   @ApiResponse({ status: 500, description: 'Internal server error.' })
-  findAll() {
+  async findAll() {
     return this.userService.findAll();
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new user' })
-  @ApiBody({
-    description: 'Create user',
-    schema: {
-      type: 'object',
-      properties: {
-        name: { type: 'string', example: 'Afonso Gouveia' },
-        cpf: { type: 'string', example: '333.333.333-12' },
-        password: { type: 'string', example: '123456' },
-        phoneNumber: { type: 'string', example: '+55 19 99898-1616' },
-        dateOfBirth: { type: 'string', example: '1990-01-01T00:00:00.000Z' },
-        accountType: { type: 'string', example: 'savings' },
-      },
-    },
-  })
+  @ApiBody({ type: CreateUserDto })
   @ApiResponse({ status: 201, description: 'User created successfully.' })
   @ApiResponse({ status: 400, description: 'Bad request, invalid input data.' })
   async create(@Body() createUserDto: CreateUserDto) {
@@ -61,18 +64,8 @@ export class UserController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update an existing user by ID' })
-  @ApiBody({
-    description: 'Update user',
-    schema: {
-      type: 'object',
-      properties: {
-        oldPassword: { type: 'string', example: '123456' },
-        newPassword: { type: 'string', example: '121212' },
-        phoneNumber: { type: 'string', example: '+55 21 99898-1234' },
-      },
-    },
-  })
   @ApiParam({ name: 'id', description: 'ID of the user to update' })
+  @ApiBody({ type: UpdateUserDto })
   @ApiResponse({ status: 200, description: 'User updated successfully.' })
   @ApiResponse({ status: 400, description: 'Bad request, invalid input data.' })
   @ApiResponse({ status: 404, description: 'User not found' })
