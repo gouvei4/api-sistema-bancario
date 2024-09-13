@@ -1,85 +1,317 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Bank System API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Bem-vindo à API do Sistema Bancário! Este projeto fornece endpoints para gerenciar usuários e realizar operações bancárias, como depósitos, retiradas e transferências.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Sumário
 
-## Description
+- [Visão Geral](#visão-geral)
+- [Tecnologias](#tecnologias)
+- [Instalação](#instalação)
+- [Uso](#uso)
+  - [Autenticação](#autenticação)
+  - [Gerenciamento de Usuários](#gerenciamento-de-usuários)
+  - [Operações Bancárias](#operações-bancárias)
+- [Documentação da API](#documentação-da-api)
+- [Licença](#licença)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Visão Geral
 
-## Project setup
+A Bank System API permite:
 
-```bash
-$ npm install
+- Gerenciar usuários (criar, listar, atualizar e deletar).
+- Realizar operações bancárias, como depósitos, retiradas, transferências e consulta de saldo.
+
+## Tecnologias
+
+Este projeto utiliza as seguintes tecnologias:
+
+- **Node.js** - Ambiente de execução para JavaScript.
+- **NestJS** - Framework para construir aplicações server-side.
+- **Prisma** - ORM para interagir com o banco de dados.
+- **Swagger** - Documentação interativa da API.
+
+## Instalação
+
+Para instalar e rodar este projeto localmente, siga os passos abaixo:
+
+1. Clone o repositório:
+
+    ```bash
+    git clone https://github.com/seu-usuario/bank-system-api.git
+    cd bank-system-api
+    ```
+
+2. Instale as dependências:
+
+    ```bash
+    npm install
+    ```
+
+3. Configure o banco de dados. Crie um arquivo `.env` na raiz do projeto e adicione suas variáveis de ambiente:
+
+    ```env
+    DATABASE_URL=seu-url-do-banco-de-dados
+    JWT_SECRET=seu-segredo-jwt
+    ```
+
+4. Execute as migrações do Prisma:
+
+    ```bash
+    npx prisma migrate deploy
+    ```
+
+5. Inicie a aplicação:
+
+    ```bash
+    npm run start
+    ```
+
+## Uso
+
+### Autenticação
+
+Para autenticar, você deve fazer login utilizando CPF e senha para obter um token JWT.
+
+**Endpoint para login:**
+
+```http
+POST /auth/login
 ```
 
-## Compile and run the project
+**Corpo da Requisição:**
 
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```json
+{
+  "cpf": "string",
+  "password": "string"
+}
 ```
 
-## Run tests
+**Respostas:**
 
-```bash
-# unit tests
-$ npm run test
+- **200 OK**
+  ```json
+  {
+    "access_token": "string"
+  }
+  ```
+- **401 Unauthorized**
 
-# e2e tests
-$ npm run test:e2e
+Utilize o token JWT retornado para acessar endpoints protegidos, incluindo-o no cabeçalho `Authorization` no formato `Bearer <token>`.
 
-# test coverage
-$ npm run test:cov
+### Gerenciamento de Usuários
+
+#### Retorna todos os usuários
+
+```http
+GET /users
 ```
 
-## Resources
+| Parâmetro       | Tipo       | Descrição                                  |
+|-----------------|------------|--------------------------------------------|
+| `Authorization` | `string`   | **Obrigatório**. Token JWT no formato `Bearer <token>` |
 
-Check out a few resources that may come in handy when working with NestJS:
+**Respostas:**
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- **200 OK**
+  ```json
+  [
+    {
+      "id": "string",
+      "name": "string",
+      "cpf": "string",
+      "phoneNumber": "string",
+      "dateOfBirth": "string",
+      "accountType": "string"
+    }
+  ]
+  ```
+- **500 Internal Server Error**
 
-## Support
+#### Cria um novo usuário
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```http
+POST /users
+```
 
-## Stay in touch
+| Parâmetro       | Tipo       | Descrição                                  |
+|-----------------|------------|--------------------------------------------|
+| `Authorization` | `string`   | **Obrigatório**. Token JWT no formato `Bearer <token>` |
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+**Corpo da Requisição:**
 
-## License
+```json
+{
+  "name": "string",
+  "cpf": "string",
+  "password": "string",
+  "phoneNumber": "string",
+  "dateOfBirth": "string",
+  "accountType": "string"
+}
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+**Respostas:**
+
+- **201 Created**
+- **400 Bad Request**
+
+#### Atualiza um usuário existente
+
+```http
+PATCH /users/{id}
+```
+
+| Parâmetro       | Tipo       | Descrição                                  |
+|-----------------|------------|--------------------------------------------|
+| `id`            | `string`   | **Obrigatório**. O ID do usuário a ser atualizado |
+| `Authorization` | `string`   | **Obrigatório**. Token JWT no formato `Bearer <token>` |
+
+**Corpo da Requisição:**
+
+```json
+{
+  "phoneNumber": "string",
+  "oldPassword": "string",
+  "newPassword": "string"
+}
+```
+
+**Respostas:**
+
+- **200 OK**
+- **400 Bad Request**
+- **404 Not Found**
+
+#### Exclui um usuário
+
+```http
+DELETE /users/{id}
+```
+
+| Parâmetro       | Tipo       | Descrição                                  |
+|-----------------|------------|--------------------------------------------|
+| `id`            | `string`   | **Obrigatório**. O ID do usuário a ser deletado |
+| `Authorization` | `string`   | **Obrigatório**. Token JWT no formato `Bearer <token>` |
+
+**Respostas:**
+
+- **200 OK**
+- **404 Not Found**
+
+### Operações Bancárias
+
+#### Retorna todas as contas
+
+```http
+GET /transactions
+```
+
+| Parâmetro       | Tipo       | Descrição                                  |
+|-----------------|------------|--------------------------------------------|
+| `Authorization` | `string`   | **Obrigatório**. Token JWT no formato `Bearer <token>` |
+
+**Respostas:**
+
+- **200 OK**
+- **500 Internal Server Error**
+
+#### Deposita fundos em uma conta
+
+```http
+POST /transactions/deposit
+```
+
+| Parâmetro       | Tipo       | Descrição                                  |
+|-----------------|------------|--------------------------------------------|
+| `Authorization` | `string`   | **Obrigatório**. Token JWT no formato `Bearer <token>` |
+
+**Corpo da Requisição:**
+
+```json
+{
+  "accountNumber": "string",
+  "balance": 0,
+  "password": "string"
+}
+```
+
+**Respostas:**
+
+- **200 OK**
+- **400 Bad Request**
+- **404 Not Found**
+
+#### Retira fundos de uma conta
+
+```http
+POST /transactions/withdraw
+```
+
+| Parâmetro       | Tipo       | Descrição                                  |
+|-----------------|------------|--------------------------------------------|
+| `Authorization` | `string`   | **Obrigatório**. Token JWT no formato `Bearer <token>` |
+
+**Corpo da Requisição:**
+
+```json
+{
+  "accountNumber": "string",
+  "balance": 0,
+  "password": "string"
+}
+```
+
+**Respostas:**
+
+- **200 OK**
+- **400 Bad Request**
+- **404 Not Found**
+
+#### Transfere fundos entre contas
+
+```http
+POST /transactions/transfer
+```
+
+| Parâmetro       | Tipo       | Descrição                                  |
+|-----------------|------------|--------------------------------------------|
+| `Authorization` | `string`   | **Obrigatório**. Token JWT no formato `Bearer <token>` |
+
+**Corpo da Requisição:**
+
+```json
+{
+  "fromAccountNumber": "string",
+  "toAccountNumber": "string",
+  "amount": 0,
+  "password": "string"
+}
+```
+
+**Respostas:**
+
+- **200 OK**
+- **400 Bad Request**
+- **404 Not Found**
+
+#### Consulta o saldo de uma conta
+
+```http
+GET /transactions/balance
+```
+
+| Parâmetro       | Tipo       | Descrição                                  |
+|-----------------|------------|--------------------------------------------|
+| `accountNumber` | `string`   | **Obrigatório**. Número da conta para verificação do saldo |
+| `password`      | `string`   | **Obrigatório**. Senha associada à conta |
+
+**Respostas:**
+
+- **200 OK**
+- **400 Bad Request**
+- **404 Not Found**
+
+## Licença
+
+Este projeto está licenciado sob a [MIT License](LICENSE).
