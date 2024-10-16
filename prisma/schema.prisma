@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,30 +11,61 @@ datasource db {
 }
 
 model User {
-  id String @id @default(uuid())
-  name String
-  cpf String @unique
-  password String
-  phoneNumber String @unique
+  id          String   @id @default(uuid())
+  name        String
+  cpf         String   @unique
+  password    String
+  phoneNumber String   @unique
   dateOfBirth DateTime
-  accountId String  @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  accountId   String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   Account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  Boleto Boleto[]
 }
 
 model Account {
-  id           String      @id @default(uuid())
-  accountNumber String     @unique
-  agencyNumber String
-  balance      Decimal     
-  type         AccountTypes
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id            String       @id @default(uuid())
+  accountNumber String       @unique
+  agencyNumber  String
+  balance       Decimal
+  type          AccountTypes
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
-  User         User? 
+  User         User?
+  transactions Transaction[] @relation("AccountTransactions")
+
+  fromTransactions Transaction[] @relation("FromAccount")
+  toTransactions   Transaction[] @relation("ToAccount")
 }
+
+model Transaction {
+  id                String   @id @default(uuid())
+  fromAccountNumber String
+  toAccountNumber   String
+  amount            Decimal
+  createdAt         DateTime @default(now())
+
+  fromAccount Account @relation("FromAccount", fields: [fromAccountNumber], references: [accountNumber])
+  toAccount   Account @relation("ToAccount", fields: [toAccountNumber], references: [accountNumber])
+
+  Account Account[] @relation("AccountTransactions")
+}
+
+model Boleto {
+  id               Int      @id @default(autoincrement())
+  documentNumber   String   @unique
+  value            Float
+  userId           String?  
+  paidBy           String?  
+  status           String    
+  User             User?    @relation(fields: [userId], references: [id])
+}
+
+
 
 enum AccountTypes {
   checking

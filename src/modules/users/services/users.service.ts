@@ -1,18 +1,30 @@
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { DatabaseService } from 'src/database/database.service';
+import { DatabaseService } from '../../../database/database.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { AccountGenerator } from '../utils/generators/account.generator';
 import { cpfFormatter } from '../utils/formatters/cpf.formatter';
+import { Decimal } from '@prisma/client/runtime/library';
+import { calculateAge } from '../utils/calculate';
+import { UpdateUserDto } from '../dto/update-user.dto';
 
 @Injectable()
 export class UserService {
   constructor(private readonly databaseService: DatabaseService) {}
+
+  private formatCurrency(value: Decimal): string {
+    return value.toNumber().toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    });
+  }
 
   async findAll() {
     const users = await this.databaseService.user.findMany({});
@@ -30,10 +42,83 @@ export class UserService {
     };
   }
 
+  async getByUser(userId: string) {
+    const account = await this.databaseService.account.findFirst({
+      where: {
+        User: { id: userId },
+      },
+      select: {
+        id: true,
+        accountNumber: true,
+        agencyNumber: true,
+        balance: true,
+        type: true,
+        User: {
+          select: {
+            id: true,
+            name: true,
+            password: true,
+            cpf: true,
+            phoneNumber: true,
+            dateOfBirth: true,
+          },
+        },
+      },
+    });
+
+    if (!account) {
+      throw new NotFoundException('Account not found for this user');
+    }
+
+    return {
+      ...account,
+      balance: this.formatCurrency(account.balance),
+    };
+  }
+
+  async getAccountByUserId(userId: string) {
+    const account = await this.databaseService.account.findFirst({
+      where: {
+        User: { id: userId },
+      },
+      select: {
+        id: true,
+        accountNumber: true,
+        agencyNumber: true,
+        balance: true,
+        type: true,
+        User: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!account) {
+      throw new NotFoundException('Account not found for this user');
+    }
+
+    return {
+      ...account,
+      balance: this.formatCurrency(account.balance),
+    };
+  }
+
   async create(createUserDto: CreateUserDto) {
     createUserDto.cpf = cpfFormatter.exec(createUserDto.cpf);
 
     await this.checkIfUserExists(createUserDto.cpf, createUserDto.phoneNumber);
+
+    const dateOfBirth = new Date(createUserDto.dateOfBirth);
+    const age = calculateAge(dateOfBirth);
+
+    if (age < 18) {
+      throw new HttpException(
+        'You must be at least 18 years old to register.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
@@ -52,10 +137,7 @@ export class UserService {
     return newUser;
   }
 
-  async updateUser(
-    userId: string,
-    updateData: { phone?: string; oldPassword?: string; newPassword?: string },
-  ) {
+  async updateUser(userId: string, updateData: UpdateUserDto) {
     const user = await this.databaseService.user.findUnique({
       where: { id: userId },
     });
@@ -64,8 +146,10 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    if (updateData.phone) {
-      user.phoneNumber = updateData.phone;
+    const updatedData: { phoneNumber?: string; password?: string } = {};
+
+    if (updateData.phoneNumber) {
+      updatedData.phoneNumber = updateData.phoneNumber;
     }
 
     if (updateData.oldPassword && updateData.newPassword) {
@@ -73,12 +157,13 @@ export class UserService {
         updateData.oldPassword,
         user.password,
       );
+
       if (!isPasswordValid) {
         throw new UnauthorizedException('Old password is incorrect');
       }
 
       const hashedNewPassword = await bcrypt.hash(updateData.newPassword, 10);
-      user.password = hashedNewPassword;
+      updatedData.password = hashedNewPassword;
     } else if (updateData.oldPassword || updateData.newPassword) {
       throw new BadRequestException(
         'Both old and new passwords must be provided',
@@ -87,10 +172,7 @@ export class UserService {
 
     await this.databaseService.user.update({
       where: { id: userId },
-      data: {
-        phoneNumber: user.phoneNumber,
-        password: user.password,
-      },
+      data: updatedData,
     });
 
     return { message: 'User updated successfully' };

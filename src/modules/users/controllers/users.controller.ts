@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -85,5 +86,75 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'User not found' })
   async deleteUser(@Param('id') userId: string) {
     return this.userService.deleteUser(userId);
+  }
+
+  @Get('account')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: 'Retrieve the account information of the logged-in user',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Account information retrieved successfully.',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', example: '1' },
+        accountNumber: { type: 'string', example: '123456789' },
+        agencyNumber: { type: 'string', example: '0001' },
+        balance: { type: 'string', example: '$1,000.00' },
+        type: { type: 'string', example: 'savings' },
+        User: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', example: 'Afonso Gouveia' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Account not found for this user' })
+  async getByUser(@Req() request) {
+    const userId = request.user.userId;
+    return this.userService.getAccountByUserId(userId);
+  }
+
+  @Get('user')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: 'Retrieve the account information of the logged-in user',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Account information retrieved successfully.',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', example: '1' },
+        accountNumber: { type: 'string', example: '123456789' },
+        agencyNumber: { type: 'string', example: '0001' },
+        balance: { type: 'string', example: '$1,000.00' },
+        type: { type: 'string', example: 'savings' },
+        User: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', example: 'Afonso Gouveia' },
+            cpf: { type: 'string', example: '333.333.333-12' },
+            phoneNumber: { type: 'string', example: '+55 19 99898-1616' },
+            dateOfBirth: {
+              type: 'string',
+              example: '1990-01-01T00:00:00.000Z',
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Account not found for this user' })
+  async getAccount(@Req() request) {
+    const userId = request.user.userId;
+    return this.userService.getByUser(userId);
   }
 }

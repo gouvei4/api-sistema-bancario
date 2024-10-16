@@ -199,6 +199,14 @@ export class TransactionService {
         },
       });
 
+      await prisma.transaction.create({
+        data: {
+          fromAccountNumber: fromAccountNumber,
+          toAccountNumber: toAccountNumber,
+          amount: new Decimal(balance),
+        },
+      });
+
       return {
         message: `Transfer of ${this.formatCurrency(
           new Decimal(balance),
@@ -235,6 +243,136 @@ export class TransactionService {
       message: 'Balance retrieved successfully',
       balance: this.formatCurrency(account.balance),
       name: account.User.name,
+    };
+  }
+
+  async getTransferDetails(accountNumber: string) {
+    const transfers = await this.dataBaseService.transaction.findMany({
+      where: {
+        OR: [
+          { fromAccountNumber: accountNumber },
+          { toAccountNumber: accountNumber },
+        ],
+      },
+      include: {
+        fromAccount: {
+          include: { User: true },
+        },
+        toAccount: {
+          include: { User: true },
+        },
+      },
+    });
+
+    const account = await this.dataBaseService.account.findUnique({
+      where: { accountNumber },
+      select: { balance: true },
+    });
+
+    if (!transfers.length) {
+      throw new NotFoundException(
+        'No transfer records found for this account.',
+      );
+    }
+
+    return transfers.map((transfer) => ({
+      balance: account.balance,
+      userName: transfer.fromAccount.User.name,
+      fromAccountNumber: transfer.fromAccount.accountNumber,
+      amount: transfer.amount,
+      timestamp: transfer.createdAt,
+      toUserName: transfer.toAccount.User.name,
+      toAccountNumber: transfer.toAccount.accountNumber,
+    }));
+  }
+
+  async getLastTransfer(accountNumber: string) {
+    if (!accountNumber) {
+      throw new BadRequestException('Account number must be provided.');
+    }
+
+    const transfer = await this.dataBaseService.transaction.findFirst({
+      where: {
+        OR: [
+          { fromAccountNumber: accountNumber },
+          { toAccountNumber: accountNumber },
+        ],
+      },
+      include: {
+        fromAccount: {
+          include: { User: true },
+        },
+        toAccount: {
+          include: { User: true },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    if (!transfer) {
+      throw new NotFoundException(
+        'No transfer records found for this account.',
+      );
+    }
+
+    return {
+      userName: transfer.fromAccount.User.name || 'Unknown Sender',
+      fromAccountNumber: transfer.fromAccount.accountNumber,
+      amount: transfer.amount,
+      timestamp: transfer.createdAt,
+      toUserName: transfer.toAccount.User.name || 'Unknown Receiver',
+      toAccountNumber: transfer.toAccount.accountNumber,
+    };
+  }
+
+  async createBoleto(value: number, userId?: string) {
+    if (value <= 0) {
+      throw new BadRequestException('O valor do boleto deve ser positivo');
+    }
+
+    const documentNumber = (
+      100000000000 +
+      Math.random() * 900000000000
+    ).toString();
+
+    const boleto = await this.dataBaseService.boleto.create({
+      data: {
+        value: value,
+        documentNumber: documentNumber,
+        userId: userId || null,
+        status: 'PENDING',
+      },
+    });
+
+    return boleto;
+  }
+
+  async payBoleto(userId: string, documentNumber: string) {
+    const boleto = await this.dataBaseService.boleto.findUnique({
+      where: { documentNumber },
+    });
+
+    if (!boleto) {
+      throw new NotFoundException('Boleto não encontrado');
+    }
+
+    if (boleto.userId === userId) {
+      throw new BadRequestException('Você não pode pagar o próprio boleto');
+    }
+
+    const updatedBoleto = await this.dataBaseService.boleto.update({
+      where: { documentNumber },
+      data: {
+        paidBy: userId,
+        status: 'PAID',
+      },
+    });
+
+    return {
+      message: 'Boleto pago com sucesso',
+      updatedBoleto: updatedBoleto,
     };
   }
 }

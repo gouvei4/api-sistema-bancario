@@ -1,0 +1,804 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/users": {
+      "get": {
+        "operationId": "UserController_findAll",
+        "summary": "Retrieve all users",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of users retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "example": "1"
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "Afonso Gouveia"
+                      },
+                      "cpf": {
+                        "type": "string",
+                        "example": "333.333.333-12"
+                      },
+                      "phoneNumber": {
+                        "type": "string",
+                        "example": "+55 19 99898-1616"
+                      },
+                      "dateOfBirth": {
+                        "type": "string",
+                        "example": "1990-01-01T00:00:00.000Z"
+                      },
+                      "accountType": {
+                        "type": "string",
+                        "example": "savings"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        },
+        "tags": [
+          "users"
+        ],
+        "security": [
+          {
+            "access-token": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "UserController_create",
+        "summary": "Create a new user",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully."
+          },
+          "400": {
+            "description": "Bad request, invalid input data."
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "patch": {
+        "operationId": "UserController_updateUser",
+        "summary": "Update an existing user by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID of the user to update",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully."
+          },
+          "400": {
+            "description": "Bad request, invalid input data."
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      },
+      "delete": {
+        "operationId": "UserController_deleteUser",
+        "summary": "Delete a user by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID of the user to delete",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully."
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "tags": [
+          "users"
+        ],
+        "security": [
+          {
+            "access-token": []
+          }
+        ]
+      }
+    },
+    "/users/account": {
+      "get": {
+        "operationId": "UserController_getByUser",
+        "summary": "Retrieve the account information of the logged-in user",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Account information retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "1"
+                    },
+                    "accountNumber": {
+                      "type": "string",
+                      "example": "123456789"
+                    },
+                    "agencyNumber": {
+                      "type": "string",
+                      "example": "0001"
+                    },
+                    "balance": {
+                      "type": "string",
+                      "example": "$1,000.00"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "savings"
+                    },
+                    "User": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "example": "Afonso Gouveia"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Account not found for this user"
+          }
+        },
+        "tags": [
+          "users"
+        ],
+        "security": [
+          {
+            "access-token": []
+          }
+        ]
+      }
+    },
+    "/users/user": {
+      "get": {
+        "operationId": "UserController_getAccount",
+        "summary": "Retrieve the account information of the logged-in user",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Account information retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "1"
+                    },
+                    "accountNumber": {
+                      "type": "string",
+                      "example": "123456789"
+                    },
+                    "agencyNumber": {
+                      "type": "string",
+                      "example": "0001"
+                    },
+                    "balance": {
+                      "type": "string",
+                      "example": "$1,000.00"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "savings"
+                    },
+                    "User": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "example": "Afonso Gouveia"
+                        },
+                        "cpf": {
+                          "type": "string",
+                          "example": "333.333.333-12"
+                        },
+                        "phoneNumber": {
+                          "type": "string",
+                          "example": "+55 19 99898-1616"
+                        },
+                        "dateOfBirth": {
+                          "type": "string",
+                          "example": "1990-01-01T00:00:00.000Z"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Account not found for this user"
+          }
+        },
+        "tags": [
+          "users"
+        ],
+        "security": [
+          {
+            "access-token": []
+          }
+        ]
+      }
+    },
+    "/transactions": {
+      "get": {
+        "operationId": "TransactionController_getAllAcounts",
+        "summary": "Retrieve all accounts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of all accounts retrieved successfully."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        },
+        "tags": [
+          "transactions"
+        ],
+        "security": [
+          {
+            "access-token": []
+          }
+        ]
+      }
+    },
+    "/transactions/deposit": {
+      "post": {
+        "operationId": "TransactionController_deposit",
+        "summary": "Deposit funds into an account",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Deposit request data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "accountNumber": {
+                    "type": "string",
+                    "example": ""
+                  },
+                  "balance": {
+                    "type": "number",
+                    "example": 1000
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": ""
+                  }
+                },
+                "required": [
+                  "accountNumber",
+                  "balance"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deposit successful."
+          },
+          "400": {
+            "description": "Bad request, invalid input data."
+          },
+          "404": {
+            "description": "Account not found."
+          }
+        },
+        "tags": [
+          "transactions"
+        ],
+        "security": [
+          {
+            "access-token": []
+          }
+        ]
+      }
+    },
+    "/transactions/withdraw": {
+      "post": {
+        "operationId": "TransactionController_withdraw",
+        "summary": "Withdraw funds from an account",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Withdraw request data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "accountNumber": {
+                    "type": "string",
+                    "example": ""
+                  },
+                  "balance": {
+                    "type": "number",
+                    "example": 500
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": ""
+                  }
+                },
+                "required": [
+                  "accountNumber",
+                  "balance"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Withdrawal successful."
+          },
+          "400": {
+            "description": "Bad request, invalid input data."
+          },
+          "404": {
+            "description": "Account not found."
+          }
+        },
+        "tags": [
+          "transactions"
+        ],
+        "security": [
+          {
+            "access-token": []
+          }
+        ]
+      }
+    },
+    "/transactions/transfer": {
+      "post": {
+        "operationId": "TransactionController_transfer",
+        "summary": "Transfer funds between accounts",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Transfer request data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fromAccountNumber": {
+                    "type": "string",
+                    "example": ""
+                  },
+                  "toAccountNumber": {
+                    "type": "string",
+                    "example": ""
+                  },
+                  "amount": {
+                    "type": "number",
+                    "example": 100
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": ""
+                  }
+                },
+                "required": [
+                  "fromAccountNumber",
+                  "toAccountNumber",
+                  "amount"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transfer successful."
+          },
+          "400": {
+            "description": "Bad request, invalid input data."
+          },
+          "404": {
+            "description": "Source or destination account not found."
+          }
+        },
+        "tags": [
+          "transactions"
+        ],
+        "security": [
+          {
+            "access-token": []
+          }
+        ]
+      }
+    },
+    "/transactions/balance": {
+      "get": {
+        "operationId": "TransactionController_checkBalance",
+        "summary": "Check the balance of an account",
+        "parameters": [
+          {
+            "name": "accountNumber",
+            "required": true,
+            "in": "query",
+            "description": "The account number for which the balance is being checked",
+            "example": "123456789",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "password",
+            "required": true,
+            "in": "query",
+            "description": "The password associated with the account. Must be exactly 6 characters long.",
+            "example": "123456",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Balance retrieved successfully."
+          },
+          "400": {
+            "description": "Bad request, invalid input data."
+          },
+          "404": {
+            "description": "Account not found."
+          }
+        },
+        "tags": [
+          "transactions"
+        ],
+        "security": [
+          {
+            "access-token": []
+          }
+        ]
+      }
+    },
+    "/transactions/{accountNumber}/transfers": {
+      "get": {
+        "operationId": "TransactionController_getTransferDetails",
+        "parameters": [
+          {
+            "name": "accountNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "transactions"
+        ],
+        "security": [
+          {
+            "access-token": []
+          }
+        ]
+      }
+    },
+    "/transactions/last-transfer/{accountNumber}": {
+      "get": {
+        "operationId": "TransactionController_getLastTransfer",
+        "parameters": [
+          {
+            "name": "accountNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "transactions"
+        ],
+        "security": [
+          {
+            "access-token": []
+          }
+        ]
+      }
+    },
+    "/transactions/boleto": {
+      "post": {
+        "operationId": "TransactionController_generateBoleto",
+        "summary": "Generate a boleto",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Boleto generation request data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "number",
+                    "example": 5000
+                  }
+                },
+                "required": [
+                  "value"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Boleto generated successfully."
+          },
+          "400": {
+            "description": "Bad request, invalid input data."
+          }
+        },
+        "tags": [
+          "transactions"
+        ],
+        "security": [
+          {
+            "access-token": []
+          }
+        ]
+      }
+    },
+    "/transactions/{documentNumber}/pagar": {
+      "post": {
+        "operationId": "TransactionController_payBoleto",
+        "parameters": [
+          {
+            "name": "documentNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "transactions"
+        ],
+        "security": [
+          {
+            "access-token": []
+          }
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "summary": "Login with CPF and password",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Login credentials",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "access_token": "string"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "tags": [
+          "login"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Bank System API",
+    "description": "The user API description",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "access-token": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the user",
+            "example": "Afonso Gouveia",
+            "minLength": 3,
+            "maxLength": 50
+          },
+          "cpf": {
+            "type": "string",
+            "description": "The CPF of the user in the format XXX.XXX.XXX-XX",
+            "example": "123.321.733-38"
+          },
+          "password": {
+            "type": "string",
+            "description": "The password of the user, must be exactly 6 digits",
+            "example": "123456"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "The phone number of the user in Brazilian format",
+            "example": "+55 31 98765-3375"
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "description": "The date of birth of the user in ISO format",
+            "example": "1990-01-01T00:00:00.000Z"
+          },
+          "accountType": {
+            "type": "string",
+            "description": "The account type of the user",
+            "example": "checking"
+          }
+        },
+        "required": [
+          "name",
+          "cpf",
+          "password",
+          "phoneNumber",
+          "dateOfBirth",
+          "accountType"
+        ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "phoneNumber": {
+            "type": "string",
+            "description": "The phone number of the user in Brazilian format",
+            "example": "+55 31 98765-3375"
+          },
+          "oldPassword": {
+            "type": "string",
+            "description": "The old password of the user, must be exactly 6 digits",
+            "example": "123456"
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "The new password of the user, must be exactly 6 digits",
+            "example": "654321"
+          }
+        }
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "cpf": {
+            "type": "string",
+            "description": "The CPF of the user in the format XXX.XXX.XXX-XX",
+            "example": "123.321.733-38"
+          },
+          "password": {
+            "type": "string",
+            "description": "The password associated with the account. Must be exactly 6 characters long.",
+            "example": "123456"
+          }
+        },
+        "required": [
+          "cpf",
+          "password"
+        ]
+      }
+    }
+  }
+}
