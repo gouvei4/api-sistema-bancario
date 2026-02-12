@@ -1,317 +1,203 @@
-# Bank System API
+# 🏦 Bank System API
 
-Bem-vindo à API do Sistema Bancário! Este projeto fornece endpoints para gerenciar usuários e realizar operações bancárias, como depósitos, retiradas e transferências.
+![Node.js](https://img.shields.io/badge/Node.js-Runtime-green)
+![NestJS](https://img.shields.io/badge/NestJS-Framework-red)
+![Prisma](https://img.shields.io/badge/ORM-Prisma-2D3748)
+![JWT](https://img.shields.io/badge/Auth-JWT-black)
+![Swagger](https://img.shields.io/badge/Docs-Swagger-brightgreen)
+![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
-## Sumário
+API bancária desenvolvida com **NestJS**, focada em autenticação segura
+e operações financeiras como depósitos, retiradas e transferências.
 
-- [Visão Geral](#visão-geral)
-- [Tecnologias](#tecnologias)
-- [Instalação](#instalação)
-- [Uso](#uso)
-  - [Autenticação](#autenticação)
-  - [Gerenciamento de Usuários](#gerenciamento-de-usuários)
-  - [Operações Bancárias](#operações-bancárias)
-- [Documentação da API](#documentação-da-api)
-- [Licença](#licença)
+------------------------------------------------------------------------
 
-## Visão Geral
+## 🚀 Visão Geral
 
-A Bank System API permite:
+A **Bank System API** fornece:
 
-- Gerenciar usuários (criar, listar, atualizar e deletar).
-- Realizar operações bancárias, como depósitos, retiradas, transferências e consulta de saldo.
+-   ✅ Autenticação segura com JWT\
+-   ✅ Gerenciamento completo de usuários\
+-   ✅ Operações bancárias seguras\
+-   ✅ Estrutura preparada para aplicações financeiras escaláveis
 
-## Tecnologias
+Projeto desenvolvido seguindo boas práticas de arquitetura backend,
+separação de responsabilidades e segurança.
 
-Este projeto utiliza as seguintes tecnologias:
+------------------------------------------------------------------------
 
-- **Node.js** - Ambiente de execução para JavaScript.
-- **NestJS** - Framework para construir aplicações server-side.
-- **Prisma** - ORM para interagir com o banco de dados.
-- **Swagger** - Documentação interativa da API.
+## 🧠 Stack Tecnológica
 
-## Instalação
+### Backend
 
-Para instalar e rodar este projeto localmente, siga os passos abaixo:
+-   Node.js
+-   NestJS
+-   TypeScript
 
-1. Clone o repositório:
+### Banco de Dados
 
-    ```bash
-    git clone https://github.com/seu-usuario/bank-system-api.git
-    cd bank-system-api
-    ```
+-   Prisma ORM
 
-2. Instale as dependências:
+### Segurança
 
-    ```bash
-    npm install
-    ```
+-   JWT (JSON Web Token)
+-   Proteção de rotas com Guards
 
-3. Configure o banco de dados. Crie um arquivo `.env` na raiz do projeto e adicione suas variáveis de ambiente:
+### Documentação
 
-    ```env
-    DATABASE_URL=seu-url-do-banco-de-dados
-    JWT_SECRET=seu-segredo-jwt
-    ```
+-   Swagger (OpenAPI)
 
-4. Execute as migrações do Prisma:
+------------------------------------------------------------------------
 
-    ```bash
-    npx prisma migrate deploy
-    ```
+## ⚙️ Instalação
 
-5. Inicie a aplicação:
+``` bash
+git clone https://github.com/seu-usuario/bank-system-api.git
+cd bank-system-api
+npm install
+```
 
-    ```bash
-    npm run start
-    ```
+Configure o arquivo `.env`:
 
-## Uso
+``` env
+DATABASE_URL=seu-url-do-banco-de-dados
+JWT_SECRET=seu-segredo-jwt
+```
 
-### Autenticação
+Execute as migrations:
 
-Para autenticar, você deve fazer login utilizando CPF e senha para obter um token JWT.
+``` bash
+npx prisma migrate deploy
+```
 
-**Endpoint para login:**
+Inicie a aplicação:
 
-```http
+``` bash
+npm run start
+```
+
+------------------------------------------------------------------------
+
+## 🔐 Autenticação
+
+### Login
+
+``` http
 POST /auth/login
 ```
 
-**Corpo da Requisição:**
-
-```json
+``` json
 {
   "cpf": "string",
   "password": "string"
 }
 ```
 
-**Respostas:**
+Resposta:
 
-- **200 OK**
-  ```json
-  {
-    "access_token": "string"
-  }
-  ```
-- **401 Unauthorized**
+``` json
+{
+  "access_token": "string"
+}
+```
 
-Utilize o token JWT retornado para acessar endpoints protegidos, incluindo-o no cabeçalho `Authorization` no formato `Bearer <token>`.
+Utilize o token no header:
 
-### Gerenciamento de Usuários
+    Authorization: Bearer <token>
 
-#### Retorna todos os usuários
+------------------------------------------------------------------------
 
-```http
+## 👤 Gerenciamento de Usuários
+
+### Listar usuários
+
+``` http
 GET /users
 ```
 
-| Parâmetro       | Tipo       | Descrição                                  |
-|-----------------|------------|--------------------------------------------|
-| `Authorization` | `string`   | **Obrigatório**. Token JWT no formato `Bearer <token>` |
+### Criar usuário
 
-**Respostas:**
-
-- **200 OK**
-  ```json
-  [
-    {
-      "id": "string",
-      "name": "string",
-      "cpf": "string",
-      "phoneNumber": "string",
-      "dateOfBirth": "string",
-      "accountType": "string"
-    }
-  ]
-  ```
-- **500 Internal Server Error**
-
-#### Cria um novo usuário
-
-```http
+``` http
 POST /users
 ```
 
-| Parâmetro       | Tipo       | Descrição                                  |
-|-----------------|------------|--------------------------------------------|
-| `Authorization` | `string`   | **Obrigatório**. Token JWT no formato `Bearer <token>` |
+### Atualizar usuário
 
-**Corpo da Requisição:**
-
-```json
-{
-  "name": "string",
-  "cpf": "string",
-  "password": "string",
-  "phoneNumber": "string",
-  "dateOfBirth": "string",
-  "accountType": "string"
-}
-```
-
-**Respostas:**
-
-- **201 Created**
-- **400 Bad Request**
-
-#### Atualiza um usuário existente
-
-```http
+``` http
 PATCH /users/{id}
 ```
 
-| Parâmetro       | Tipo       | Descrição                                  |
-|-----------------|------------|--------------------------------------------|
-| `id`            | `string`   | **Obrigatório**. O ID do usuário a ser atualizado |
-| `Authorization` | `string`   | **Obrigatório**. Token JWT no formato `Bearer <token>` |
+### Deletar usuário
 
-**Corpo da Requisição:**
-
-```json
-{
-  "phoneNumber": "string",
-  "oldPassword": "string",
-  "newPassword": "string"
-}
-```
-
-**Respostas:**
-
-- **200 OK**
-- **400 Bad Request**
-- **404 Not Found**
-
-#### Exclui um usuário
-
-```http
+``` http
 DELETE /users/{id}
 ```
 
-| Parâmetro       | Tipo       | Descrição                                  |
-|-----------------|------------|--------------------------------------------|
-| `id`            | `string`   | **Obrigatório**. O ID do usuário a ser deletado |
-| `Authorization` | `string`   | **Obrigatório**. Token JWT no formato `Bearer <token>` |
+Todos os endpoints requerem:
 
-**Respostas:**
+    Authorization: Bearer <token>
 
-- **200 OK**
-- **404 Not Found**
+------------------------------------------------------------------------
 
-### Operações Bancárias
+## 💰 Operações Bancárias
 
-#### Retorna todas as contas
+### Listar transações
 
-```http
+``` http
 GET /transactions
 ```
 
-| Parâmetro       | Tipo       | Descrição                                  |
-|-----------------|------------|--------------------------------------------|
-| `Authorization` | `string`   | **Obrigatório**. Token JWT no formato `Bearer <token>` |
+### Depositar
 
-**Respostas:**
-
-- **200 OK**
-- **500 Internal Server Error**
-
-#### Deposita fundos em uma conta
-
-```http
+``` http
 POST /transactions/deposit
 ```
 
-| Parâmetro       | Tipo       | Descrição                                  |
-|-----------------|------------|--------------------------------------------|
-| `Authorization` | `string`   | **Obrigatório**. Token JWT no formato `Bearer <token>` |
+### Sacar
 
-**Corpo da Requisição:**
-
-```json
-{
-  "accountNumber": "string",
-  "balance": 0,
-  "password": "string"
-}
-```
-
-**Respostas:**
-
-- **200 OK**
-- **400 Bad Request**
-- **404 Not Found**
-
-#### Retira fundos de uma conta
-
-```http
+``` http
 POST /transactions/withdraw
 ```
 
-| Parâmetro       | Tipo       | Descrição                                  |
-|-----------------|------------|--------------------------------------------|
-| `Authorization` | `string`   | **Obrigatório**. Token JWT no formato `Bearer <token>` |
+### Transferir
 
-**Corpo da Requisição:**
-
-```json
-{
-  "accountNumber": "string",
-  "balance": 0,
-  "password": "string"
-}
-```
-
-**Respostas:**
-
-- **200 OK**
-- **400 Bad Request**
-- **404 Not Found**
-
-#### Transfere fundos entre contas
-
-```http
+``` http
 POST /transactions/transfer
 ```
 
-| Parâmetro       | Tipo       | Descrição                                  |
-|-----------------|------------|--------------------------------------------|
-| `Authorization` | `string`   | **Obrigatório**. Token JWT no formato `Bearer <token>` |
+### Consultar saldo
 
-**Corpo da Requisição:**
-
-```json
-{
-  "fromAccountNumber": "string",
-  "toAccountNumber": "string",
-  "amount": 0,
-  "password": "string"
-}
-```
-
-**Respostas:**
-
-- **200 OK**
-- **400 Bad Request**
-- **404 Not Found**
-
-#### Consulta o saldo de uma conta
-
-```http
+``` http
 GET /transactions/balance
 ```
 
-| Parâmetro       | Tipo       | Descrição                                  |
-|-----------------|------------|--------------------------------------------|
-| `accountNumber` | `string`   | **Obrigatório**. Número da conta para verificação do saldo |
-| `password`      | `string`   | **Obrigatório**. Senha associada à conta |
+------------------------------------------------------------------------
 
-**Respostas:**
+## 🏗 Arquitetura
 
-- **200 OK**
-- **400 Bad Request**
-- **404 Not Found**
+Estrutura baseada no padrão do NestJS:
 
-## Licença
+-   Controllers → Entrada HTTP
+-   Services → Regras de negócio
+-   Guards → Proteção de rotas
+-   Prisma → Persistência de dados
 
-Este projeto está licenciado sob a [MIT License](LICENSE).
+Projeto estruturado para manter:
+
+-   🔒 Segurança
+-   📈 Escalabilidade
+-   🧠 Clareza arquitetural
+
+------------------------------------------------------------------------
+
+## 👨‍💻 Autor
+
+Desenvolvido por **Afonso Gouveia**\
+Engenheiro de Software focado em backend, APIs seguras e arquitetura
+escalável.
+
+------------------------------------------------------------------------
+
+## 📄 Licença
+
+Distribuído sob a licença MIT.
